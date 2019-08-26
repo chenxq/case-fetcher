@@ -1,0 +1,14 @@
+{
+  "name": "fetchcase",
+  "version": "1.0.0",
+  "description": "fetch case from einstein and generate feature file",
+  "main": "index.js",
+  "scripts": {
+    "test": "create"
+  },
+  "keywords": [
+    "Einstein"
+  ],
+  "author": "Sarah",
+  "license": "ISC"
+}
