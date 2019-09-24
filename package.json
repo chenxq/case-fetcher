@@ -1,14 +1,19 @@
 {
-  "name": "fetchcase",
+  "name": "case-fetcher",
   "version": "1.0.0",
-  "description": "fetch case from einstein and generate feature file",
+  "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "create"
+  "bin": {
+    "case-fetcher": "./bin/index.js"
   },
-  "keywords": [
-    "Einstein"
-  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com//chenxq/case-fetcher.git"
+  },
+  "keywords": [],
   "author": "Sarah",
   "license": "ISC"
 }
