@@ -24,7 +24,7 @@ coverage
 # Dependency directory
 node_modules
 */**/node_modules
-*/**/package-lock.json
+package-lock.json
 
 # Optional npm cache directory
 .npm
@@ -61,3 +61,6 @@ alias.json
 */**/gh-pages
 
 loginInfo.js
+
+/src/features
+
