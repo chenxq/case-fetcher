@@ -1,10 +1,17 @@
+#!/usr/bin/env node
 
 const commander = require('commander');
+const info = require('../package');
 const { create, update, mkdir } = require('../src/lib/fetchCase');
 
 /**
  * E2E support create test case template file from custom cases server.
  */
+
+commander
+  .version(info.version)
+  .usage('<command> [options]');
+
 commander
   .command('create')
   .arguments('[caseID]')

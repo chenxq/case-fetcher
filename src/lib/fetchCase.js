@@ -1,5 +1,5 @@
 const { resolve } = require('path');
-const DEFAULT_CONFIG_FILE_PATH = './e2e.config.js';
+const DEFAULT_CONFIG_FILE_PATH = '../e2e.config.js';
 
 function handleCommand(arg, cmd) {
   let config;
