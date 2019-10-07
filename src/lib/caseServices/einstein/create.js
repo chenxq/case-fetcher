@@ -84,7 +84,7 @@ export async function create(caseId, caseContent, Directory) {
     return;
   }
   fs.readFile(
-    path.join(__dirname, './template.js'),
+    path.join(__dirname, '../../../../template.js'),
     'utf-8',
     async (err, data) => {
       if (err || typeof data === 'undefined') {

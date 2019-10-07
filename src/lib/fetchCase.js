@@ -5,7 +5,7 @@ function handleCommand(arg, cmd) {
   let config;
   try {
     // eslint-disable-next-line
-    config = require(DEFAULT_CONFIG_FILE_PATH);
+    config = require(resolve(process.cwd(), DEFAULT_CONFIG_FILE_PATH));
   } catch (error) {
     console.error(`Unexpected import '${DEFAULT_CONFIG_FILE_PATH}' path.`);
     console.error(error);

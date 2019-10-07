@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { BaseService } from 'tees';
+import { BaseService } from '../../baseService';
 import FetchData from './fetchData';
 import { create, update } from './create';
 
