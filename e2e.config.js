@@ -18,9 +18,9 @@ module.exports = {
       url: 'http://einstein.int.ringcentral.com/',
       handler: './src/lib/caseServices/einsteinE5',
       featuresPath: './src/features',
-      projectId: loginInfo && loginInfo.caseServices && loginInfo.caseServices.projectId || 1309,
-      username: loginInfo && loginInfo.caseServices && loginInfo.caseServices.username || null,
-      password: loginInfo && loginInfo.caseServices && loginInfo.caseServices.password || null,
+      projectId: (loginInfo && loginInfo.caseServices && loginInfo.caseServices.projectId) || 1309,
+      username: (loginInfo && loginInfo.caseServices && loginInfo.caseServices.username) || null,
+      password: (loginInfo && loginInfo.caseServices && loginInfo.caseServices.password) || null,
     }]
   }
 };

@@ -77,6 +77,7 @@ export async function create(caseId, caseContent, Directory) {
   if (currentDirectory) {
     currentDirectory = currentDirectory.join('/');
   }
+  console.log('-------->currentDirectory<---------', currentDirectory);
   const projectName = `RCI-${caseId}_${filterName(caseContent.name)}.spec.js`;
   const targetDir = `${currentDirectory}/${projectName}`;
   if (fs.existsSync(targetDir)) {
@@ -84,7 +85,8 @@ export async function create(caseId, caseContent, Directory) {
     return;
   }
   fs.readFile(
-    path.join(__dirname, '../../../../template.js'),
+    path.join(__dirname, './template.js'),
+    // path.join(__dirname, '../../../../template.js'),
     'utf-8',
     async (err, data) => {
       if (err || typeof data === 'undefined') {

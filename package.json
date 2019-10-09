@@ -17,13 +17,16 @@
   "dependencies": {
     "@babel/traverse": "^7.6.2",
     "commander": "^2.17.1",
-    "einstein-sdk": "^1.0.16"
+    "einstein-sdk": "1.0.16"
   },
   "devDependencies": {
-    "@babel/generator": "^7.6.2",
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-es2015": "^6.24.1"
+    "@babel/cli": "^7.6.2",
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-decorators": "^7.6.0",
+    "@babel/plugin-proposal-export-default-from": "^7.5.2",
+    "@babel/plugin-proposal-export-namespace-from": "^7.5.2",
+    "@babel/plugin-proposal-object-rest-spread": "^7.6.2",
+    "@babel/preset-env": "^7.6.2"
   },
   "keywords": [],
   "author": "Sarah",
