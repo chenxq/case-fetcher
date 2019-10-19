@@ -2,7 +2,7 @@
 
 const commander = require('commander');
 const info = require('../package');
-const { create, update, mkdir } = require('../src/lib/fetchCase');
+const { create, update, mkdir, template } = require('../src/lib/fetchCase');
 
 /**
  * E2E support create test case template file from custom cases server.
@@ -34,6 +34,14 @@ commander
   .option('-S, --service <service>', '')
   .option('-O, --origin <origin>', '')
   .action(mkdir);
+
+commander
+  .command('template')
+  .arguments('<path>')
+  .description('Set template file path.')
+  .option('-S, --service <service>', '')
+  .option('-O, --origin <origin>', '')
+  .action(template);
 
 commander.parse(process.argv);
 

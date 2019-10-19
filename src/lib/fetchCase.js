@@ -1,5 +1,6 @@
 const { resolve } = require('path');
 const DEFAULT_CONFIG_FILE_PATH = './e2e.config.js';
+const fs = require('fs');
 
 function handleCommand(arg, cmd) {
   let config;
@@ -59,7 +60,7 @@ const create = async (input, cmd) => {
   const cmdServicesList = handleCommand(input, cmd);
   let Services;
   for (const {
-    handler, caseIDs, featuresPath, ...params
+    handler, caseIDs, featuresPath, templatePath, ...params
   } of cmdServicesList) {
     try {
       // eslint-disable-next-line
@@ -78,7 +79,7 @@ const create = async (input, cmd) => {
     }
 
     for (const id of caseIDs) {
-      await services.createCaseTemplate(id, featuresPath);
+      await services.createCaseTemplate(id, featuresPath, templatePath);
     }
   }
 };
@@ -136,8 +137,27 @@ const mkdir = async (cmd) => {
   }
 };
 
+const template = async (input, cmd) => {
+  const cmdServicesList = handleCommand(input, cmd);
+  fs.readFile(resolve(process.cwd(), DEFAULT_CONFIG_FILE_PATH), 'utf8', function (err, data) {
+    if (err) throw err;
+
+    var pat = /^.*template.*$/m
+    let targetLine = data.match(pat)[0];
+    let templatePathStr = targetLine.match(/\'.*\'/)[0];
+    let newContent = data.replace(templatePathStr, '\'' + input + '\'');
+
+    fs.writeFile(resolve(process.cwd(), DEFAULT_CONFIG_FILE_PATH), newContent, 'utf8', (err) => {
+      if (err) throw err;
+      console.log('success done');
+    });
+  });
+};
+
+
 module.exports = {
   create,
   update,
-  mkdir
+  mkdir,
+  template
 };
