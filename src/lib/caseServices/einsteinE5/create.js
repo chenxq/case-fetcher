@@ -84,7 +84,7 @@ function handleCaseContent(caseContent, suiteId, update = false) {
   return caseContent;
 }
 
-async function create(caseId, caseContent, Directory) {
+async function create(caseId, caseContent, Directory, templatePath) {
   let template = '';
   let currentDirectory = Directory.name;
 
@@ -101,10 +101,9 @@ async function create(caseId, caseContent, Directory) {
     return;
   }
 
-  _fs.default.readFile(_path.default.join(__dirname, './template.js'), // path.join(__dirname, '../../../../template.js'),
-  'utf-8', async (err, data) => {
+  _fs.default.readFile(templatePath, 'utf-8', async (err, data) => {
     if (err || typeof data === 'undefined') {
-      console.error(`template.js doesn't exist in ${_path.default.join(__dirname, '../template.js')}`);
+      console.error(`template.js doesn't exist in ${templatePath}`);
       return;
     }
 

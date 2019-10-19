@@ -101,7 +101,7 @@ class EinsteinServices {
     console.log(`Make all directory in ${featuresPath} successfully!`);
   }
 
-  async createCaseTemplate(externalId, featuresPath) {
+  async createCaseTemplate(externalId, featuresPath, templatePath) {
     if (!_fs.default.existsSync(featuresPath)) {
       console.log(`featuresPath ${featuresPath} doesn’t exist`);
       return;
@@ -113,7 +113,7 @@ class EinsteinServices {
       name: [featuresPath],
       id: []
     });
-    await (0, _create.create)(externalId, caseContent, currentDirectory);
+    await (0, _create.create)(externalId, caseContent, currentDirectory, templatePath);
   }
 
   async updateCaseTemplate(externalId, featuresPath) {
