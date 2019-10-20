@@ -251,7 +251,9 @@ function getUpdateCaseByRegex(caseContent, Directory, targetDir) {
 
 export async function update(caseId, caseContent, Directory, useBabel) {
   let currentDirectory = Directory.name;
-  caseContent = caseContent.item;
+  if(caseContent.item){
+    caseContent = caseContent.item;
+  }
   if (currentDirectory) {
     currentDirectory = currentDirectory.join('/');
   }
