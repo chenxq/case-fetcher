@@ -3,6 +3,7 @@
 const commander = require('commander');
 const info = require('../package');
 const { create, update, mkdir, template } = require('../src/lib/fetchCase');
+const { initConfig } = require('../src/lib/initConfig');
 
 /**
  * E2E support create test case template file from custom cases server.
@@ -42,6 +43,12 @@ commander
   .option('-S, --service <service>', '')
   .option('-O, --origin <origin>', '')
   .action(template);
+
+commander
+  .command('init')
+  .description('Init an new case-fetcher configuration')
+  .usage('<command>')
+  .action(initConfig)
 
 commander.parse(process.argv);
 
