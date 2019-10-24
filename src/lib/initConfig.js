@@ -7,7 +7,7 @@ async function initConfig() {
     fs.writeFileSync(path.join(process.cwd(), '/e2e.config.js'), e2eConfigTemplate, 'ascii');
 
 
-    const loginFile = fs.readFileSync(path.join(__dirname, '../templates/loginInfo.js'), 'utf-8').toString();
+    const loginFile = fs.readFileSync(path.join(__dirname, '../templates/loginInfoTemplate.js'), 'utf-8').toString();
     fs.writeFileSync(path.join(process.cwd(), '/loginInfo.js'), loginFile, 'ascii');
 
     const templateFile = fs.readFileSync(path.join(__dirname, '../templates/template.js'), 'utf-8').toString();
