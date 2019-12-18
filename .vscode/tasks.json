@@ -5,6 +5,13 @@
       "label": "run build",
       "type": "shell",
       "command": "npm run build",
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "addenv",
+      "type": "shell",
+      "command": "npm run addenv",
       "problemMatcher": []
     }
   ]
