@@ -10,37 +10,13 @@ var _generator = _interopRequireDefault(require("@babel/generator"));
 
 var _traverse = _interopRequireDefault(require("@babel/traverse"));
 
+var _stringTemplate = _interopRequireDefault(require("string-template"));
+
 var _path = _interopRequireDefault(require("path"));
 
 var _fs = _interopRequireDefault(require("fs"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const symbolIcon = '#####';
-
-function compile({
-  keys,
-  values,
-  template
-}) {
-  values = values.map(value => {
-    if (Array.isArray(value)) {
-      value = value.join(`${symbolIcon}n`);
-    }
-
-    return value;
-  });
-  let renderTemplate;
-  const str = `return ${symbolIcon}\`${template}${symbolIcon}\``.replace(new RegExp(symbolIcon, 'g'), '\\');
-
-  try {
-    renderTemplate = new Function(...keys, str);
-  } catch (e) {
-    console.log(e, str, keys, values);
-  }
-
-  return renderTemplate(...values);
-}
 
 function mkdirsSync(dirname) {
   if (_fs.default.existsSync(dirname)) {
@@ -75,7 +51,7 @@ function handleCaseBody(caseContent, update = false) {
       caseContent[key] = new Date(caseContent[key]).toUTCString().split('GMT')[0];
     } else if (key === 'preconditions') {
       caseContent.preconditions = formatText(caseContent.preconditions.split('Account type(/s):')[0]);
-      caseContent.preconditions = `\t\t\t\t<Given desc={\\\`\r\t\t\t\t\t\t${caseContent.preconditions}\\\`} />`;
+      caseContent.preconditions = `\t\t\t\t<Given desc={\`\r\t\t\t\t\t\t${caseContent.preconditions}\`} />`;
     } else if (key === 'children') {
       caseContent[key] = caseContent[key].sort((item, next) => item.order - next.order);
       caseContent[key] = caseContent[key].map((item, index) => {
@@ -83,7 +59,7 @@ function handleCaseBody(caseContent, update = false) {
           item = `/*\n\t__Step${index + 1}__:${item.name}\n\t[Expected Result]:${item.expectedResult}\n*/`;
         } else {
           item.expectedResult = formatText(item.expectedResult);
-          item = item.expectedResult.indexOf('\n') > -1 ? `\t\t\t\t<When desc="${item.name.replace(/(")/gm, '').replace(/^\s+|\s+$/g, '')}" />\n\t\t\t\t<Then \n\t\t\t\t\tdesc={\\\`\r\t\t\t\t\t\t${item.expectedResult}\\\`} />` : `\t\t\t\t<When desc="${item.name.replace(/(")/gm, '').replace(/^\s+|\s+$/g, '')}" />\n\t\t\t\t<Then desc="${item.expectedResult}" />`;
+          item = item.expectedResult.indexOf('\n') > -1 ? `\t\t\t\t<When desc="${item.name.replace(/(")/gm, '').replace(/^\s+|\s+$/g, '')}" />\n\t\t\t\t<Then \n\t\t\t\t\tdesc={\`\r\t\t\t\t\t\t${item.expectedResult}\`} />` : `\t\t\t\t<When desc="${item.name.replace(/(")/gm, '').replace(/^\s+|\s+$/g, '')}" />\n\t\t\t\t<Then desc="${item.expectedResult}" />`;
         }
 
         return item;
@@ -164,8 +140,6 @@ async function create(caseId, caseContent, Directory) {
     return;
   }
 
-  console.log('-------------->>>>>>>> current path : ', __dirname);
-
   _fs.default.readFile(_path.default.join(__dirname, '../../../templates/template.jsx'), 'utf-8', async (err, data) => {
     if (err || typeof data === 'undefined') {
       console.error(`template.jsx doesn't exist in ${_path.default.join(__dirname, '../template.jsx')}`);
@@ -176,11 +150,7 @@ async function create(caseId, caseContent, Directory) {
     console.log('\nCreating ...');
     template = data.toString();
     caseContent = handleCaseContent(caseContent, Directory.id, false);
-    const result = compile({
-      template,
-      keys: Object.keys(caseContent),
-      values: Object.values(caseContent)
-    });
+    const result = (0, _stringTemplate.default)(template, caseContent);
 
     _fs.default.writeFile(`${targetDir}`, result, 'ascii', err => {
       if (err) throw err;

@@ -17,7 +17,8 @@
   "dependencies": {
     "@babel/traverse": "^7.6.2",
     "commander": "^2.17.1",
-    "einstein-sdk": "1.0.16"
+    "einstein-sdk": "1.0.16",
+    "string-template": "^1.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.6.2",

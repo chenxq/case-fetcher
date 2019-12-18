@@ -1,30 +1,8 @@
 import generate from '@babel/generator';
 import traverse from '@babel/traverse';
+import format from 'string-template';
 import path from 'path';
 import fs from 'fs';
-
-const symbolIcon = '#####';
-
-
-function compile({ keys, values, template }) {
-
-  values = values.map(value => {
-    if (Array.isArray(value)) {
-      value = value.join(`${symbolIcon}n`);
-    }
-
-    return value;
-  });
-  let renderTemplate;
-  const str = `return ${symbolIcon}\`${template}${symbolIcon}\``.replace(new RegExp(symbolIcon, 'g'), '\\');
-
-  try {
-    renderTemplate = new Function(...keys, str);
-  } catch (e) {
-    console.log(e, str, keys, values);
-  }
-  return renderTemplate(...values);
-}
 
 function mkdirsSync(dirname) {
   if (fs.existsSync(dirname)) {
@@ -64,9 +42,9 @@ function handleCaseBody(caseContent, update = false) {
       caseContent.preconditions = formatText(
         caseContent.preconditions.split('Account type(/s):')[0],
       );
-      caseContent.preconditions = `\t\t\t\t<Given desc={\\\`\r\t\t\t\t\t\t${
+      caseContent.preconditions = `\t\t\t\t<Given desc={\`\r\t\t\t\t\t\t${
         caseContent.preconditions
-        }\\\`} />`;
+        }\`} />`;
     } else if (key === 'children') {
       caseContent[key] = caseContent[key].sort(
         (item, next) => item.order - next.order,
@@ -86,9 +64,9 @@ function handleCaseBody(caseContent, update = false) {
                 .replace(
                   /^\s+|\s+$/g,
                   '',
-                )}" />\n\t\t\t\t<Then \n\t\t\t\t\tdesc={\\\`\r\t\t\t\t\t\t${
+                )}" />\n\t\t\t\t<Then \n\t\t\t\t\tdesc={\`\r\t\t\t\t\t\t${
               item.expectedResult
-              }\\\`} />`
+              }\`} />`
               : `\t\t\t\t<When desc="${item.name
                 .replace(/(")/gm, '')
                 .replace(/^\s+|\s+$/g, '')}" />\n\t\t\t\t<Then desc="${
@@ -168,7 +146,6 @@ export async function create(caseId, caseContent, Directory) {
     console.log(`${targetDir} exists !`);
     return;
   }
-  console.log('-------------->>>>>>>> current path : ', __dirname);
   fs.readFile(
     path.join(__dirname, '../../../templates/template.jsx'),
     'utf-8',
@@ -186,11 +163,7 @@ export async function create(caseId, caseContent, Directory) {
       console.log('\nCreating ...');
       template = data.toString();
       caseContent = handleCaseContent(caseContent, Directory.id, false);
-      const result = compile({
-        template,
-        keys: Object.keys(caseContent),
-        values: Object.values(caseContent),
-      });
+      const result = format(template, caseContent)
 
       fs.writeFile(`${targetDir}`, result, 'ascii', (err) => {
         if (err) throw err;
@@ -290,72 +263,4 @@ function getUpdatedCaseByBabel(caseContent, targetDir) {
     code,
   );
   return output.code;
-}
-
-function getUpdateCaseByRegex(caseContent, Directory, targetDir) {
-  caseContent = handleCaseContent(caseContent, Directory.id, true);
-  let data = fs.readFileSync(targetDir, 'utf-8');
-  const str = data.match(/(\/\*(.|\s)*?\*\/)/g);
-  const steps = caseContent.children;
-  const reg = new RegExp('__Step');
-  const title_new = `/* RCI-${caseContent.externalId}: ${caseContent.name}
-  ${caseContent.url}
-
-  Preconditions:${caseContent.preconditions}
-  Entry point(/s):${caseContent.entryPoints}
-  */`;
-  const title_reg = new RegExp('RCI-(\\d+)');
-  for (let i = 0; i < str.length; i++) {
-    if (title_reg.test(str[i])) {
-      if (str[i] !== title_new) {
-        str[i] = title_new;
-      }
-    }
-  }
-  for (let i = 0, j = 0; i < str.length; i++) {
-    if (reg.test(str[i])) {
-      if (str[i] !== steps[j]) {
-        str[i] = steps[j];
-      }
-      j++;
-    }
-    if (i === str.length - 1 && steps.length > j) {
-      for (let k = j; k < steps.length; k++) {
-        str[i] = `${str[i]}\n\n${steps[k]}`;
-      }
-    }
-  }
-
-  const result = data.match(/(\/\*(.|\s)*?\*\/)/g);
-  if (result && result.length > 0) {
-    for (let i = 0; i < result.length; i++) {
-      if (str[i]) {
-        data = data.replace(result[i], str[i]);
-      }
-    }
-  }
-  return data;
-}
-
-export async function update(caseId, caseContent, Directory, useBabel) {
-  let currentDirectory = Directory.name;
-  if (caseContent.item) {
-    caseContent = caseContent.item;
-  }
-  if (currentDirectory) {
-    currentDirectory = currentDirectory.join('/');
-  }
-  const projectName = `RCI-${caseId}_${filterName(caseContent.name)}.spec.js`;
-  const targetDir = `${currentDirectory}/${projectName}`;
-  if (!fs.existsSync(targetDir)) {
-    console.log(`${targetDir} doesn't exists !`);
-    return;
-  }
-  const data = useBabel
-    ? getUpdatedCaseByBabel(caseContent, targetDir)
-    : getUpdateCaseByRegex(caseContent, Directory, targetDir);
-  fs.writeFile(`${targetDir}`, data, 'ascii', (err) => {
-    if (err) throw err;
-    console.log(`Update ${targetDir} successfully!`);
-  });
 }
