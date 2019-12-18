@@ -1,6 +1,6 @@
-const { resolve } = require('path');
+import { resolve } from 'path';
 const DEFAULT_CONFIG_FILE_PATH = './e2e.config.js';
-const fs = require('fs');
+import fs from 'fs';
 
 function handleCommand(arg, cmd) {
   let config;
@@ -15,12 +15,16 @@ function handleCommand(arg, cmd) {
   }
   let cmdServices;
   if (arg) {
-    const isCaseIDs = (/,/).test(arg);
+    const isCaseIDs = /,/.test(arg);
     // eslint-disable-next-line
-    const caseIDArray = arg.split(isCaseIDs ? ',' : ' ').map(e => parseInt(e));
+    const caseIDArray = arg
+      .split(isCaseIDs ? ',' : ' ')
+      .map((e) => parseInt(e));
     if (!cmd.origin) {
       cmd.origin = config.caseServices.defaultOrigin;
-      console.warn(`you are using defaultOrigin --> ${config.caseServices.defaultOrigin}`);
+      console.warn(
+        `you are using defaultOrigin --> ${config.caseServices.defaultOrigin}`,
+      );
     }
     cmdServices = { list: [{ origin: cmd.origin, caseIDs: caseIDArray }] };
   } else if (cmd.origin) {
@@ -34,14 +38,17 @@ function handleCommand(arg, cmd) {
   }
 
   const {
-    originField, handlerField, projectIdField, ulField
+    originField,
+    handlerField,
+    projectIdField,
+    ulField,
   } = config.caseServices;
-  const configServicesList = config.caseServices.list.map(item => ({
+  const configServicesList = config.caseServices.list.map((item) => ({
     ...item,
     origin: item[originField || 'origin'],
     handler: item[handlerField || 'handler'],
     projectId: item[projectIdField || 'projectId'],
-    ul: item[ulField || 'ul']
+    ul: item[ulField || 'ul'],
   }));
   const cmdServicesList = cmdServices.list;
   cmdServicesList.forEach((cmdService, index) => {
@@ -56,24 +63,29 @@ function handleCommand(arg, cmd) {
   return cmdServicesList;
 }
 
-const create = async (input, cmd) => {
+export const create = async (input, cmd) => {
   const cmdServicesList = handleCommand(input, cmd);
   let Services;
   for (const {
-    handler, caseIDs, featuresPath, templatePath, ...params
+    handler,
+    caseIDs,
+    featuresPath,
+    templatePath,
+    ...params
   } of cmdServicesList) {
     try {
       // eslint-disable-next-line
       const servicesModule = require(resolve(process.cwd(), handler));
-      Services = (servicesModule && servicesModule.__esModule) ?
-        servicesModule.default :
-        servicesModule;
+      Services =
+        servicesModule && servicesModule.__esModule
+          ? servicesModule.default
+          : servicesModule;
     } catch (error) {
       throw error;
     }
     const services = new Services(params);
     if (!featuresPath || featuresPath === '') {
-      console.error(`Please enter featuresPath in ${configPath}`);
+      console.error(`Please enter featuresPath in ${'TODO'}`);
       process.exit();
       return;
     }
@@ -84,24 +96,23 @@ const create = async (input, cmd) => {
   }
 };
 
-const update = async (input, cmd) => {
+export const update = async (input, cmd) => {
   const cmdServicesList = handleCommand(input, cmd);
   let Services;
-  for (const {
-    handler, caseIDs, featuresPath, ...params
-  } of cmdServicesList) {
+  for (const { handler, caseIDs, featuresPath, ...params } of cmdServicesList) {
     try {
       // eslint-disable-next-line
       const servicesModule = require(resolve(process.cwd(), handler));
-      Services = (servicesModule && servicesModule.__esModule) ?
-        servicesModule.default :
-        servicesModule;
+      Services =
+        servicesModule && servicesModule.__esModule
+          ? servicesModule.default
+          : servicesModule;
     } catch (error) {
       throw error;
     }
     const services = new Services(params);
     if (!featuresPath || featuresPath === '') {
-      console.error(`Please enter featuresPath in ${configPath}`);
+      console.error(`Please enter featuresPath in ${'TODO'}`);
       process.exit();
       return;
     }
@@ -112,24 +123,23 @@ const update = async (input, cmd) => {
   }
 };
 
-const mkdir = async (cmd) => {
+export const mkdir = async (cmd) => {
   const cmdServicesList = handleCommand('', cmd);
   let Services;
-  for (const {
-    handler, featuresPath, ...params
-  } of cmdServicesList) {
+  for (const { handler, featuresPath, ...params } of cmdServicesList) {
     try {
       // eslint-disable-next-line
       const servicesModule = require(resolve(process.cwd(), handler));
-      Services = (servicesModule && servicesModule.__esModule) ?
-        servicesModule.default :
-        servicesModule;
+      Services =
+        servicesModule && servicesModule.__esModule
+          ? servicesModule.default
+          : servicesModule;
     } catch (error) {
       throw error;
     }
     const services = new Services(params);
     if (!featuresPath || featuresPath === '') {
-      console.error(`Please enter featuresPath in ${configPath}`);
+      console.error(`Please enter featuresPath in ${'TODO'}`);
       process.exit();
       return;
     }
@@ -137,27 +147,28 @@ const mkdir = async (cmd) => {
   }
 };
 
-const template = async (input, cmd) => {
+export const template = async (input, cmd) => {
   const cmdServicesList = handleCommand(input, cmd);
-  fs.readFile(resolve(process.cwd(), DEFAULT_CONFIG_FILE_PATH), 'utf8', function (err, data) {
-    if (err) throw err;
-
-    var pat = /^.*template.*$/m
-    let targetLine = data.match(pat)[0];
-    let templatePathStr = targetLine.match(/\'.*\'/)[0];
-    let newContent = data.replace(templatePathStr, '\'' + input + '\'');
-
-    fs.writeFile(resolve(process.cwd(), DEFAULT_CONFIG_FILE_PATH), newContent, 'utf8', (err) => {
+  fs.readFile(
+    resolve(process.cwd(), DEFAULT_CONFIG_FILE_PATH),
+    'utf8',
+    function(err, data) {
       if (err) throw err;
-      console.log('success done');
-    });
-  });
-};
 
+      var pat = /^.*template.*$/m;
+      let targetLine = data.match(pat)[0];
+      let templatePathStr = targetLine.match(/\'.*\'/)[0];
+      let newContent = data.replace(templatePathStr, "'" + input + "'");
 
-module.exports = {
-  create,
-  update,
-  mkdir,
-  template
+      fs.writeFile(
+        resolve(process.cwd(), DEFAULT_CONFIG_FILE_PATH),
+        newContent,
+        'utf8',
+        (err) => {
+          if (err) throw err;
+          console.log('success done');
+        },
+      );
+    },
+  );
 };

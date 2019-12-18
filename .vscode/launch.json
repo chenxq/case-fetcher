@@ -7,20 +7,29 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
-      "program": "${workspaceFolder}/bin/index.js",
-      "args": ["create", "${input:repoName}"]
-    }
+      "name": "test create",
+      // "preLaunchTask": "addenv",
+      "program": "${workspaceFolder}/dist/case-fetcher.js",
+      "sourceMaps": true,
+      "args": [
+        "create",
+        "${input:caseNumber}"
+      ],
+    },
   ],
   "inputs": [
     {
       "type": "pickString",
-      "id": "repoName",
-      "description": "Which repo you want to run test?",
+      "id": "caseNumber",
+      "description": "case number?",
       "options": [
+        "1000",
+        "1001",
         "1002",
+        "1003",
+        "1004",
       ],
-      "default": "1000"
+      "default": "1000",
     }
   ]
 }

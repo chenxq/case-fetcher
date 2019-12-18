@@ -1,9 +1,9 @@
-const childProcess = require('child_process');
+import childProcess from 'child_process';
 
 const DEAULT_PROCESS_STDIO = 'inherit';
-const DEAULT_PROCESS_OPTIONS = {
+const DEAULT_PROCESS_OPTIONS: childProcess.SpawnOptions = {
   stdio: DEAULT_PROCESS_STDIO,
-  cwd: process.cwd()
+  cwd: process.cwd(),
 };
 const DEAULT_PROCESS_EXIT = (code, signal) => {
   // console.log(signal, 'exit');
@@ -11,9 +11,9 @@ const DEAULT_PROCESS_EXIT = (code, signal) => {
 const DEAULT_PROCESS_CLOSE = (code, signal) => {
   // console.log(signal, 'close');
 };
-const DEAULT_PROCESS_START = () => {};
+const DEAULT_PROCESS_START = (x: any) => {};
 
-module.exports = function createProcess({
+export default function createProcess({
   command,
   args,
   options = DEAULT_PROCESS_OPTIONS,
@@ -24,7 +24,7 @@ module.exports = function createProcess({
   start({
     command,
     args,
-    options
+    options,
   });
   const commandProcess = childProcess.spawn(command, args, options);
   commandProcess.on('exit', exit);
@@ -33,4 +33,4 @@ module.exports = function createProcess({
   // commandProcess.stdout.on('data', data => console.log(`${data}`));
   // commandProcess.stderr.on('data', data => console.log(`${data}`));
   return commandProcess;
-};
+}

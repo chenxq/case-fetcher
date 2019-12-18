@@ -1,14 +1,14 @@
-const { resolve } = require('path');
+import path from 'path';
 
-function getWorkAbsolutePath(path) {
-  return resolve(process.cwd(), path);
+export function getWorkAbsolutePath(path) {
+  return path.resolve(process.cwd(), path);
 }
 
 function isAbsolutePath(path) {
   return /^\//.test(path);
 }
 
-function getFile(path) {
+export function getFile(path) {
   try {
     const _path = isAbsolutePath(path) ? path : getWorkAbsolutePath(path);
     // eslint-disable-next-line
@@ -19,10 +19,4 @@ function getFile(path) {
     console.error(error);
     process.exit();
   }
-  return null;
 }
-
-module.exports = {
-  getWorkAbsolutePath,
-  getFile,
-};

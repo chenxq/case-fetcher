@@ -1,25 +1,24 @@
-#!/usr/bin/env node
+import commander from 'commander';
+const pkg = require('./package.json');
 
-const commander = require('commander');
-const info = require('../package');
-const { create, update, mkdir, template } = require('../src/lib/fetchCase');
-const { initConfig } = require('../src/lib/initConfig');
-
-console.log('create:')
+import { initConfig } from './lib/initConfig';
+import { create, update } from './lib/caseServices/create.js';
+import { mkdir, template } from './lib/fetchCase.js';
 
 /**
  * E2E support create test case template file from custom cases server.
  */
 
-commander
-  .version(info.version)
-  .usage('<command> [options]');
+commander.version(pkg.version, '-v, --version').usage('<command> [options]');
 
 commander
   .command('create')
   .arguments('[caseID]')
   .description('Create Case from caseServices.')
-  .option('-S, --service <service>', 'Create case template with those service params.')
+  .option(
+    '-S, --service <service>',
+    'Create case template with those service params.',
+  )
   .option('-O, --origin <origin>', 'Create case template with origin.')
   .action(create);
 
@@ -27,7 +26,10 @@ commander
   .command('update')
   .arguments('[caseID]')
   .description('Update Case from caseServices.')
-  .option('-S, --service <service>', 'Update case template with service params.')
+  .option(
+    '-S, --service <service>',
+    'Update case template with service params.',
+  )
   .option('-O, --origin <origin>', 'Update case template with origin.')
   .action(update);
 
@@ -50,7 +52,7 @@ commander
   .command('init')
   .description('Init an new case-fetcher configuration')
   .usage('<command>')
-  .action(initConfig)
+  .action(initConfig);
 
 commander.parse(process.argv);
 

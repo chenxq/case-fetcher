@@ -1,5 +1,4 @@
 function isPlainobject(value) {
-  // eslint-disable-next-line
   return value && Object.prototype === value.__proto__;
 }
 
@@ -14,8 +13,4 @@ function checkValidity(dir) {
   return dir;
 }
 
-module.exports = {
-  isPlainobject,
-  isNil,
-  checkValidity,
-};
+export { isPlainobject, isNil, checkValidity };
