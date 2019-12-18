@@ -13,7 +13,7 @@ var _baseService = require("../../baseService");
 
 var _fetchData = _interopRequireDefault(require("./fetchData"));
 
-var _create = require("./create");
+var _createAC = require("./createAC");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -113,7 +113,7 @@ class EinsteinServices {
       name: [featuresPath],
       id: []
     });
-    await (0, _create.create)(externalId, caseContent, currentDirectory, templatePath);
+    await (0, _createAC.create)(externalId, caseContent, currentDirectory, templatePath);
   }
 
   async updateCaseTemplate(externalId, featuresPath) {
@@ -128,7 +128,7 @@ class EinsteinServices {
       name: [featuresPath],
       id: []
     });
-    await (0, _create.update)(externalId, caseContent, currentDirectory);
+    await (0, _createAC.update)(externalId, caseContent, currentDirectory);
   }
 
 }

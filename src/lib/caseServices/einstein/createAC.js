@@ -3,8 +3,26 @@ import traverse from '@babel/traverse';
 import path from 'path';
 import fs from 'fs';
 
+const symbolIcon = '#####';
+
+
 function compile({ keys, values, template }) {
-  const renderTemplate = (...keys) => `${template}`;
+
+  values = values.map(value => {
+    if (Array.isArray(value)) {
+      value = value.join(`${symbolIcon}n`);
+    }
+
+    return value;
+  });
+  let renderTemplate;
+  const str = `return ${symbolIcon}\`${template}${symbolIcon}\``.replace(new RegExp(symbolIcon, 'g'), '\\');
+
+  try {
+    renderTemplate = new Function(...keys, str);
+  } catch (e) {
+    console.log(e, str, keys, values);
+  }
   return renderTemplate(...values);
 }
 
@@ -27,20 +45,28 @@ function filterName(str) {
   return str;
 }
 
-function handleCaseContent(caseContent, suiteId, update = false) {
-  const baseUrl = 'http://einstein.int.ringcentral.com/?project=1309';
-  suiteId.unshift(baseUrl);
-  const url = `${suiteId.join('&suite=')}&case=${caseContent.id}`;
-  const entryPoint = caseContent.preconditions.split('Entry point(/s):')[1];
-  caseContent.preconditions = caseContent.preconditions.split(
-    'Account type(/s):',
-  )[0];
-  caseContent = Object.assign({ url, entryPoint }, caseContent);
+function formatText(str) {
+  const formatedText = str
+    .replace(/(")/gm, '')
+    .replace(/^\s+|\s+$/g, '')
+    .replace(/(\n|\r|\t)+/gm, '\n')
+    .replace(/\n/gm, '\n\t\t\t\t\t\t');
+  return formatedText;
+}
+
+function handleCaseBody(caseContent, update = false) {
   for (const key in caseContent) {
     if (key === 'dateCreated' || key === 'lastUpdated') {
       caseContent[key] = new Date(caseContent[key])
         .toUTCString()
         .split('GMT')[0];
+    } else if (key === 'preconditions') {
+      caseContent.preconditions = formatText(
+        caseContent.preconditions.split('Account type(/s):')[0],
+      );
+      caseContent.preconditions = `\t\t\t\t<Given desc={\\\`\r\t\t\t\t\t\t${
+        caseContent.preconditions
+        }\\\`} />`;
     } else if (key === 'children') {
       caseContent[key] = caseContent[key].sort(
         (item, next) => item.order - next.order,
@@ -49,16 +75,30 @@ function handleCaseContent(caseContent, suiteId, update = false) {
         if (update) {
           item = `/*\n\t__Step${index + 1}__:${
             item.name
-          }\n\t[Expected Result]:${item.expectedResult}\n*/`;
+            }\n\t[Expected Result]:${item.expectedResult}\n*/`;
         } else {
-          item = `/*\n\t__Step${index + 1}__:${
-            item.name
-          }\n\t[Expected Result]:${item.expectedResult}\n*/\n\n`;
+          item.expectedResult = formatText(item.expectedResult);
+
+          item =
+            item.expectedResult.indexOf('\n') > -1
+              ? `\t\t\t\t<When desc="${item.name
+                .replace(/(")/gm, '')
+                .replace(
+                  /^\s+|\s+$/g,
+                  '',
+                )}" />\n\t\t\t\t<Then \n\t\t\t\t\tdesc={\\\`\r\t\t\t\t\t\t${
+              item.expectedResult
+              }\\\`} />`
+              : `\t\t\t\t<When desc="${item.name
+                .replace(/(")/gm, '')
+                .replace(/^\s+|\s+$/g, '')}" />\n\t\t\t\t<Then desc="${
+              item.expectedResult
+              }" />`;
         }
         return item;
       });
       if (!update) {
-        caseContent[key] = caseContent[key].join('\n\n');
+        caseContent[key] = caseContent[key].join('\n');
       }
     } else if (
       key === 'createdBy' ||
@@ -67,30 +107,78 @@ function handleCaseContent(caseContent, suiteId, update = false) {
       caseContent[key] = '';
     }
   }
-
   return caseContent;
 }
 
-export async function create(caseId, caseContent, Directory, templatePath) {
+function handleCaseContent(caseContent, suiteId, update = false) {
+  const baseUrl = 'http://einstein.int.ringcentral.com/?project=1309';
+  suiteId.unshift(baseUrl);
+  const url = `${suiteId.join('&suite=')}&case=${caseContent.id}`;
+  const entryPoints = caseContent.preconditions
+    .split('Entry point(/s):')[1]
+    .split('\n')
+    .filter((e) => e.replace(/(\r\n|\n|\r|\t|\s)/gm, ''));
+  caseContent = Object.assign({ url, entryPoints }, caseContent);
+  caseContent = handleCaseBody(caseContent);
+  let entryPointNumber = 0;
+  if (entryPoints.length === 0) {
+    caseContent.scenario = `@autorun(test.skip)
+@title("${caseContent.name}")
+class PleaseDefineYourClassName extends Step {
+  run() {
+    return (
+      <Scenario desc="${caseContent.name}" >
+${caseContent.preconditions}
+${caseContent.children}
+      </Scenario>
+    );
+  }
+}`;
+  } else {
+    caseContent.scenario = Object.values(entryPoints).map((entryPoint) => {
+      entryPointNumber += 1;
+      entryPoint = entryPoint.replace(/^\s+|\s+$/g, '');
+      return `
+@autorun(test.skip)
+@title("${entryPoint}")
+class PleaseDefineYourClassName${entryPointNumber} extends Step {
+  run() {
+    return (
+      <Scenario desc="${entryPoint}" >
+${caseContent.preconditions}
+${caseContent.children}
+      </Scenario>
+    );
+  }
+}`;
+    });
+  }
+  return caseContent;
+}
+
+export async function create(caseId, caseContent, Directory) {
   let template = '';
   let currentDirectory = Directory.name;
   if (currentDirectory) {
     currentDirectory = currentDirectory.join('/');
   }
-  console.log('-------->currentDirectory<---------', currentDirectory);
-  const projectName = `RCI-${caseId}_${filterName(caseContent.name)}.spec.js`;
+  const projectName = `RCI-${caseId}_${filterName(caseContent.name)}ac.spec.js`;
   const targetDir = `${currentDirectory}/${projectName}`;
   if (fs.existsSync(targetDir)) {
     console.log(`${targetDir} exists !`);
     return;
   }
+  console.log('-------------->>>>>>>> current path : ', __dirname);
   fs.readFile(
-    templatePath,
+    path.join(__dirname, '../../../templates/template.jsx'),
     'utf-8',
     async (err, data) => {
       if (err || typeof data === 'undefined') {
         console.error(
-          `template.js doesn't exist in ${templatePath}`,
+          `template.jsx doesn't exist in ${path.join(
+            __dirname,
+            '../template.jsx',
+          )}`,
         );
         return;
       }
@@ -98,7 +186,6 @@ export async function create(caseId, caseContent, Directory, templatePath) {
       console.log('\nCreating ...');
       template = data.toString();
       caseContent = handleCaseContent(caseContent, Directory.id, false);
-      console.log('case content: ', caseContent);
       const result = compile({
         template,
         keys: Object.keys(caseContent),
@@ -175,7 +262,7 @@ function getUpdatedCaseByBabel(caseContent, targetDir) {
             type: 'CommentBlock',
             value: `\n\t__Step${lastStepInAst + 2 + index}__:${
               e.name
-            }\n\t[Expected Result]:${e.expectedResult}`,
+              }\n\t[Expected Result]:${e.expectedResult}`,
           }));
           const { trailingComments, leadingComments } = lastItem;
           if (trailingComments) {
@@ -215,7 +302,7 @@ function getUpdateCaseByRegex(caseContent, Directory, targetDir) {
   ${caseContent.url}
 
   Preconditions:${caseContent.preconditions}
-  Entry point(/s):${caseContent.entryPoint}
+  Entry point(/s):${caseContent.entryPoints}
   */`;
   const title_reg = new RegExp('RCI-(\\d+)');
   for (let i = 0; i < str.length; i++) {
@@ -252,7 +339,7 @@ function getUpdateCaseByRegex(caseContent, Directory, targetDir) {
 
 export async function update(caseId, caseContent, Directory, useBabel) {
   let currentDirectory = Directory.name;
-  if(caseContent.item){
+  if (caseContent.item) {
     caseContent = caseContent.item;
   }
   if (currentDirectory) {

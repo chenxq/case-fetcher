@@ -5,6 +5,8 @@ const info = require('../package');
 const { create, update, mkdir, template } = require('../src/lib/fetchCase');
 const { initConfig } = require('../src/lib/initConfig');
 
+console.log('create:')
+
 /**
  * E2E support create test case template file from custom cases server.
  */
