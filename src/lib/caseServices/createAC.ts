@@ -139,6 +139,7 @@ export async function create(caseId, caseContent, Directory) {
   if (currentDirectory) {
     currentDirectory = currentDirectory.join('/');
   }
+  
   const projectName = `RCI-${caseId}_${filterName(caseContent.name)}ac.spec.js`;
   const targetDir = `${currentDirectory}/${projectName}`;
   if (fs.existsSync(targetDir)) {
@@ -146,14 +147,14 @@ export async function create(caseId, caseContent, Directory) {
     return;
   }
   fs.readFile(
-    path.join(__dirname, '../../../templates/template.jsx'),
+    path.join(process.cwd(), './template.jsx'),
     'utf-8',
     async (err, data) => {
       if (err || typeof data === 'undefined') {
         console.error(
           `template.jsx doesn't exist in ${path.join(
-            __dirname,
-            '../template.jsx',
+            process.cwd(),
+            './template.jsx',
           )}`,
         );
         return;

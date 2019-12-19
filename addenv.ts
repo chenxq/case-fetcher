@@ -2,12 +2,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ncp } from 'ncp';
 
-const moveUrl = ['/src/template', 'CHANGELOG.md', 'README.md', 'package.json'];
+const moveUrl = ['/src/templates', 'CHANGELOG.md', 'README.md', 'package.json'];
 
-const destinationUrl = 'dist';
+const destinationUrl = process.argv.includes('--prod') ? 'publish' : 'dist';
 
 export class AddEnv {
-  fromUrl = 'dist/case-fetcher.js';
+  fromUrl = `${destinationUrl}/index.js`;
 
   constructor() {
     this.writeFile(this.fromUrl);

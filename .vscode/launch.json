@@ -9,11 +9,22 @@
       "request": "launch",
       "name": "test create",
       // "preLaunchTask": "addenv",
-      "program": "${workspaceFolder}/dist/case-fetcher.js",
+      "program": "${workspaceFolder}/dist/index.js",
       "sourceMaps": true,
       "args": [
         "create",
         "${input:caseNumber}"
+      ],
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "init",
+      // "preLaunchTask": "addenv",
+      "program": "${workspaceFolder}/dist/index.js",
+      "sourceMaps": true,
+      "args": [
+        "init"
       ],
     },
   ],

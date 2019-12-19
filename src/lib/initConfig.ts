@@ -32,6 +32,15 @@ export async function initConfig() {
       templateFile,
       'ascii',
     );
+
+    const templateFileJSX = fs
+      .readFileSync(path.join(__dirname, '../templates/template.jsx'), 'utf-8')
+      .toString();
+    fs.writeFileSync(
+      path.join(process.cwd(), '/template.jsx'),
+      templateFileJSX,
+      'ascii',
+    );
   } catch (error) {
     throw error;
   }

@@ -16,7 +16,9 @@
         "esModuleInterop": true
     },
     "include": [
-        "src/**/*.ts"
+        "src/**/*.ts", "src/templates/template.jsx", "src/templates/e2eConfig.js"
     ],
-    "exclude": []
+    "exclude": [
+        "src/templates/**/*"
+    ]
 }

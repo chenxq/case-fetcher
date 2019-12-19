@@ -56,19 +56,19 @@ export default class FetchData {
         console.log(`Your case ID ${externalId} is wrong`);
         return null;
       }
-      const { item } = await this.einsteinSDK.getTestCase(this.itemId);
-      if (item.children) {
-        item.children.forEach((element) => {
+      const result = await this.einsteinSDK.getTestCase(this.itemId);
+      if (result.children) {
+        result.children.forEach((element) => {
           const { expectedResult, name } = element;
           element.expectedResult =
             expectedResult && this._format(expectedResult);
           element.name = name && this._format(name);
         });
       }
-      const { preconditions, summary } = item;
-      item.preconditions = preconditions && this._format(preconditions);
-      item.summary = summary && this._format(summary);
-      return item;
+      const { preconditions, summary } = result;
+      result.preconditions = preconditions && this._format(preconditions);
+      result.summary = summary && this._format(summary);
+      return result;
     } catch (error) {
       console.log(error);
       return null;
