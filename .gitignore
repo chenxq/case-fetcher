@@ -64,3 +64,6 @@ loginInfo.js
 
 /src/features
 
+dist
+
+publish

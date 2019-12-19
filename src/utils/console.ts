@@ -1,18 +1,10 @@
-const { getNowTime } = require('./time');
+import { getNowTime } from './time';
 
 const DEFAULT_LEVEL = 'log';
-const types = [
-  'error',
-  'warn',
-  'info',
-  'log',
-  'verbose',
-  'debug',
-  'silly'
-];
+const types = ['error', 'warn', 'info', 'log', 'verbose', 'debug', 'silly'];
 
-function logOutput(hooks = {}) {
-  const generateOutput = type => (...args) => {
+export function logOutput(hooks = {}) {
+  const generateOutput = (type) => (...args) => {
     let defaultLevel = DEFAULT_LEVEL;
     if (global.__context__) {
       if (global.__context__.options.isVerbose) {
@@ -35,7 +27,3 @@ function logOutput(hooks = {}) {
 }
 
 logOutput.types = types;
-
-module.exports = {
-  logOutput,
-};

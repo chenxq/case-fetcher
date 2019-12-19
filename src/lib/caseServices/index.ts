@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { BaseService } from '../../baseService';
 import FetchData from './fetchData';
-import { create, update } from './create';
+import { create } from './createAC';
+import { update } from './create';
 
 function filterDir(str) {
   str = str.replace(/\s/g, '');
@@ -59,6 +59,7 @@ function makeAllDir(projects, Path) {
 
 // TODO extends BaseService reslove babel class
 export default class EinsteinServices {
+  _fetchData: FetchData;
   constructor(params) {
     this._fetchData = new FetchData(params);
   }
@@ -89,9 +90,9 @@ export default class EinsteinServices {
       externalId,
       { name: [featuresPath], id: [] },
     );
-    await create(externalId, caseContent, currentDirectory, templatePath);
+    await create(externalId, caseContent, currentDirectory);
   }
-  
+
   async updateCaseTemplate(externalId, featuresPath) {
     if (!fs.existsSync(featuresPath)) {
       console.log(`featuresPath ${featuresPath} doesn't exist`);

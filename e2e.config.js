@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+
 const loginInfoPath = './loginInfo.js';
 const isExists = fs.existsSync(path.resolve(__dirname, loginInfoPath));
 const loginInfo = isExists ? require(loginInfoPath) : {};
@@ -15,6 +16,7 @@ module.exports = {
     list: [{
       origin: 'einstein',
       url: 'http://einstein.int.ringcentral.com/',
+      // handler: './node_modules/case-fetcher/src/lib/caseServices/einsteinE5',
       handler: './dist/lib/caseServices',
       featuresPath: './src/features',
       templatePath: './template.jsx',

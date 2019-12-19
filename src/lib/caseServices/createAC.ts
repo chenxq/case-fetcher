@@ -1,12 +1,7 @@
+import generate from '@babel/generator';
+import format from 'string-template';
 import path from 'path';
 import fs from 'fs';
-import generate from '@babel/generator';
-import traverse from '@babel/traverse';
-
-function compile({ keys, values, template }) {
-  const renderTemplate = new Function(...keys, `return \`${template}\``);
-  return renderTemplate(...values);
-}
 
 function mkdirsSync(dirname) {
   if (fs.existsSync(dirname)) {
@@ -27,20 +22,26 @@ function filterName(str) {
   return str;
 }
 
-function handleCaseContent(caseContent, suiteId, update = false) {
-  const baseUrl = 'http://einstein.int.ringcentral.com/?project=1309';
-  suiteId.unshift(baseUrl);
-  const url = `${suiteId.join('&suite=')}&case=${caseContent.id}`;
-  const entryPoint = caseContent.preconditions.split('Entry point(/s):')[1];
-  caseContent.preconditions = caseContent.preconditions.split(
-    'Account type(/s):',
-  )[0];
-  caseContent = Object.assign({ url, entryPoint }, caseContent);
+function formatText(str) {
+  const formatedText = str
+    .replace(/(")/gm, '')
+    .replace(/^\s+|\s+$/g, '')
+    .replace(/(\n|\r|\t)+/gm, '\n')
+    .replace(/\n/gm, '\n\t\t\t\t\t\t');
+  return formatedText;
+}
+
+function handleCaseBody(caseContent, update = false) {
   for (const key in caseContent) {
     if (key === 'dateCreated' || key === 'lastUpdated') {
       caseContent[key] = new Date(caseContent[key])
         .toUTCString()
         .split('GMT')[0];
+    } else if (key === 'preconditions') {
+      caseContent.preconditions = formatText(
+        caseContent.preconditions.split('Account type(/s):')[0],
+      );
+      caseContent.preconditions = `\t\t\t\t<Given desc={\`\r\t\t\t\t\t\t${caseContent.preconditions}\`} />`;
     } else if (key === 'children') {
       caseContent[key] = caseContent[key].sort(
         (item, next) => item.order - next.order,
@@ -51,14 +52,28 @@ function handleCaseContent(caseContent, suiteId, update = false) {
             item.name
           }\n\t[Expected Result]:${item.expectedResult}\n*/`;
         } else {
-          item = `/*\n\t__Step${index + 1}__:${
-            item.name
-          }\n\t[Expected Result]:${item.expectedResult}\n*/\n\n`;
+          item.expectedResult = formatText(item.expectedResult);
+
+          item =
+            item.expectedResult.indexOf('\n') > -1
+              ? `\t\t\t\t<When desc="${item.name
+                  .replace(/(")/gm, '')
+                  .replace(
+                    /^\s+|\s+$/g,
+                    '',
+                  )}" />\n\t\t\t\t<Then \n\t\t\t\t\tdesc={\`\r\t\t\t\t\t\t${
+                  item.expectedResult
+                }\`} />`
+              : `\t\t\t\t<When desc="${item.name
+                  .replace(/(")/gm, '')
+                  .replace(/^\s+|\s+$/g, '')}" />\n\t\t\t\t<Then desc="${
+                  item.expectedResult
+                }" />`;
         }
         return item;
       });
       if (!update) {
-        caseContent[key] = caseContent[key].join('\n\n');
+        caseContent[key] = caseContent[key].join('\n');
       }
     } else if (
       key === 'createdBy' ||
@@ -67,30 +82,80 @@ function handleCaseContent(caseContent, suiteId, update = false) {
       caseContent[key] = '';
     }
   }
-
   return caseContent;
 }
 
-export async function create(caseId, caseContent, Directory, templatePath) {
+function handleCaseContent(caseContent, suiteId, update = false) {
+  const baseUrl = 'http://einstein.int.ringcentral.com/?project=1309';
+  suiteId.unshift(baseUrl);
+  const url = `${suiteId.join('&suite=')}&case=${caseContent.id}`;
+  const entryPoints = caseContent.preconditions
+    .split('Entry point(/s):')[1]
+    .split('\n')
+    .filter((e) => e.replace(/(\r\n|\n|\r|\t|\s)/gm, ''));
+  caseContent = Object.assign({ url, entryPoints }, caseContent);
+  caseContent = handleCaseBody(caseContent);
+  let entryPointNumber = 0;
+  if (entryPoints.length === 0) {
+    caseContent.scenario = `@autorun(test.skip)
+@title("${caseContent.name}")
+class PleaseDefineYourClassName extends Step {
+  run() {
+    return (
+      <Scenario desc="${caseContent.name}" >
+${caseContent.preconditions}
+${caseContent.children}
+      </Scenario>
+    );
+  }
+}`;
+  } else {
+    caseContent.scenario = Object.values(entryPoints)
+      .map((entryPoint: string) => {
+        entryPointNumber += 1;
+        entryPoint = entryPoint.replace(/^\s+|\s+$/g, '');
+        return `
+@autorun(test.skip)
+@title("${entryPoint}")
+class PleaseDefineYourClassName${entryPointNumber} extends Step {
+  run() {
+    return (
+      <Scenario desc="${entryPoint}" >
+${caseContent.preconditions}
+${caseContent.children}
+      </Scenario>
+    );
+  }
+}`;
+      })
+      .join('\r\n');
+  }
+  return caseContent;
+}
+
+export async function create(caseId, caseContent, Directory) {
   let template = '';
   let currentDirectory = Directory.name;
   if (currentDirectory) {
     currentDirectory = currentDirectory.join('/');
   }
-  console.log('-------->currentDirectory<---------', currentDirectory);
-  const projectName = `RCI-${caseId}_${filterName(caseContent.name)}.spec.js`;
+  
+  const projectName = `RCI-${caseId}_${filterName(caseContent.name)}ac.spec.js`;
   const targetDir = `${currentDirectory}/${projectName}`;
   if (fs.existsSync(targetDir)) {
     console.log(`${targetDir} exists !`);
     return;
   }
   fs.readFile(
-    templatePath,
+    path.join(process.cwd(), './template.jsx'),
     'utf-8',
     async (err, data) => {
       if (err || typeof data === 'undefined') {
         console.error(
-          `template.js doesn't exist in ${templatePath}`,
+          `template.jsx doesn't exist in ${path.join(
+            process.cwd(),
+            './template.jsx',
+          )}`,
         );
         return;
       }
@@ -98,11 +163,7 @@ export async function create(caseId, caseContent, Directory, templatePath) {
       console.log('\nCreating ...');
       template = data.toString();
       caseContent = handleCaseContent(caseContent, Directory.id, false);
-      const result = compile({
-        template,
-        keys: Object.keys(caseContent),
-        values: Object.values(caseContent),
-      });
+      const result = format(template, caseContent);
 
       fs.writeFile(`${targetDir}`, result, 'ascii', (err) => {
         if (err) throw err;
@@ -192,8 +253,7 @@ function getUpdatedCaseByBabel(caseContent, targetDir) {
   const parseRes = require('@babel/parser').parse(code, {
     sourceType: 'module',
   });
-  traverse(parseRes, updateCommentVisitor);
-  traverse(parseRes, addCommentVisitor);
+
   const output = generate(
     parseRes,
     {
@@ -202,72 +262,4 @@ function getUpdatedCaseByBabel(caseContent, targetDir) {
     code,
   );
   return output.code;
-}
-
-function getUpdateCaseByRegex(caseContent, Directory, targetDir) {
-  caseContent = handleCaseContent(caseContent, Directory.id, true);
-  let data = fs.readFileSync(targetDir, 'utf-8');
-  const str = data.match(/(\/\*(.|\s)*?\*\/)/g);
-  const steps = caseContent.children;
-  const reg = new RegExp('__Step');
-  const title_new = `/* RCI-${caseContent.externalId}: ${caseContent.name}
-  ${caseContent.url}
-
-  Preconditions:${caseContent.preconditions}
-  Entry point(/s):${caseContent.entryPoint}
-  */`;
-  const title_reg = new RegExp('RCI-(\\d+)');
-  for (let i = 0; i < str.length; i++) {
-    if (title_reg.test(str[i])) {
-      if (str[i] !== title_new) {
-        str[i] = title_new;
-      }
-    }
-  }
-  for (let i = 0, j = 0; i < str.length; i++) {
-    if (reg.test(str[i])) {
-      if (str[i] !== steps[j]) {
-        str[i] = steps[j];
-      }
-      j++;
-    }
-    if (i === str.length - 1 && steps.length > j) {
-      for (let k = j; k < steps.length; k++) {
-        str[i] = `${str[i]}\n\n${steps[k]}`;
-      }
-    }
-  }
-
-  const result = data.match(/(\/\*(.|\s)*?\*\/)/g);
-  if (result && result.length > 0) {
-    for (let i = 0; i < result.length; i++) {
-      if (str[i]) {
-        data = data.replace(result[i], str[i]);
-      }
-    }
-  }
-  return data;
-}
-
-export async function update(caseId, caseContent, Directory, useBabel) {
-  let currentDirectory = Directory.name;
-  if(caseContent.item){
-    caseContent = caseContent.item;
-  }
-  if (currentDirectory) {
-    currentDirectory = currentDirectory.join('/');
-  }
-  const projectName = `RCI-${caseId}_${filterName(caseContent.name)}.spec.js`;
-  const targetDir = `${currentDirectory}/${projectName}`;
-  if (!fs.existsSync(targetDir)) {
-    console.log(`${targetDir} doesn't exists !`);
-    return;
-  }
-  const data = useBabel
-    ? getUpdatedCaseByBabel(caseContent, targetDir)
-    : getUpdateCaseByRegex(caseContent, Directory, targetDir);
-  fs.writeFile(`${targetDir}`, data, 'ascii', (err) => {
-    if (err) throw err;
-    console.log(`Update ${targetDir} successfully!`);
-  });
 }

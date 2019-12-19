@@ -1,0 +1,46 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "test create",
+      // "preLaunchTask": "addenv",
+      "program": "${workspaceFolder}/dist/index.js",
+      "sourceMaps": true,
+      "args": [
+        "create",
+        "${input:caseNumber}"
+      ],
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "init",
+      // "preLaunchTask": "addenv",
+      "program": "${workspaceFolder}/dist/index.js",
+      "sourceMaps": true,
+      "args": [
+        "init"
+      ],
+    },
+  ],
+  "inputs": [
+    {
+      "type": "pickString",
+      "id": "caseNumber",
+      "description": "case number?",
+      "options": [
+        "1000",
+        "1001",
+        "1002",
+        "1003",
+        "1004",
+      ],
+      "default": "1000",
+    }
+  ]
+}
